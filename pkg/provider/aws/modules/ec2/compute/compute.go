@@ -116,6 +116,14 @@ func (r *ComputeRequest) onDemandInstance(ctx *pulumi.Context) (*ec2.Instance, e
 
 // create asg with 1 instance forced by spot
 func (r ComputeRequest) spotInstance(ctx *pulumi.Context) (*autoscaling.Group, error) {
+	maptResourcesTags := maptContext.ResourceTags()
+
+	tagSpecs := ec2.LaunchTemplateTagSpecificationArray{
+		&ec2.LaunchTemplateTagSpecificationArgs{
+			Tags: maptResourcesTags,
+		},
+	}
+
 	args := &ec2.LaunchTemplateArgs{
 		NamePrefix: pulumi.String(r.ID),
 		ImageId:    pulumi.String(r.AMI.Id),
@@ -135,7 +143,8 @@ func (r ComputeRequest) spotInstance(ctx *pulumi.Context) (*autoscaling.Group, e
 				},
 			},
 		},
-		Tags: maptContext.ResourceTags(),
+		Tags:              maptResourcesTags,
+		TagSpecifications: tagSpecs,
 	}
 	if r.InstanceProfile != nil {
 		args.IamInstanceProfile = ec2.LaunchTemplateIamInstanceProfileArgs{
